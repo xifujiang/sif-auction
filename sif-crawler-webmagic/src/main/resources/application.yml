@@ -1,0 +1,10 @@
+#DB Configuration:spring:
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: shenyini
+    password: shenyini123$%^
+    url: jdbc:mysql://120.78.70.205:33306/auction_db?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+  jpa:
+    database: mysql
+    show-sql: true
