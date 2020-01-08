@@ -5,7 +5,6 @@ import com.sif.action.result.CommodityTypeResult;
 import com.sif.action.service.CommodityTypeTbService;
 import com.sif.common.entity.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,9 +23,6 @@ public class CommodityTypeTbController {
 
     @Autowired
     CommodityTypeTbService commodityTypeTbService;
-
-    @Autowired
-    RedisTemplate redisTemplate;
 
     /** 
     * @Description: 返回三级

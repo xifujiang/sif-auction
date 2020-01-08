@@ -1,6 +1,8 @@
 package com.sif.action.controller;
 
 
+import com.alibaba.fastjson.JSON;
+import com.sif.action.SSL.TencentSmsSender;
 import com.sif.action.entity.UserTb;
 import com.sif.action.repository.UserTbRepository;
 import com.sif.action.result.LoginResult;
@@ -12,6 +14,8 @@ import com.sif.common.entity.result.Result;
 import com.sif.common.util.EntityUtils;
 import com.sif.common.util.MD5Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,6 +43,9 @@ public class UserTbController {
     @Autowired
     UserTbRepository userTbRepository;
 
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
+
     /**
      * @Description: 注册
      * @Param: [requestUser]
@@ -46,7 +53,7 @@ public class UserTbController {
      * @Author: xifujiang
      * @Date: 2019/10/15
      */
-    @PostMapping(value = "api/regist")
+    @PostMapping(value = "/api/regist")
     @ResponseBody
     public Result regist(@RequestBody UserTb requestUser) {
         //查找数据库中是否有相同手机号，如果有，返回error
@@ -76,7 +83,7 @@ public class UserTbController {
      * @Author: xifujiang
      * @Date: 2019/10/15
      */
-    @PostMapping(value = "api/login")
+    @PostMapping(value = "/api/login")
     @ResponseBody
     public Result login(@RequestBody UserTb requestUser) {
         //查找数据库中是否有相同手机号，如果有，返回error
@@ -89,25 +96,48 @@ public class UserTbController {
         return new Result(400);
     }
 
-    //生产验证码 保持到redis数据库中，有效时间为一分钟
-//    @RequestMapping("/doYzm")
-//    @ResponseBody
-//    public boolean doYzm(@RequestBody req) {
-//        try {
-//            String ip = req.getRemoteAddr();
-//            String yzm = this.getYzm();
-//            System.out.println(yzm);
-//            ValueOperations forValue = rt.opsForValue();
-//            forValue.set(ip+"_yzm", yzm);
-//            rt.expire(ip+"_yzm", 60*1000, TimeUnit.MILLISECONDS);
-//            return true;
-//        } catch (Exception e) {
-//            // TODO: handle exception
-//            e.printStackTrace();
-//        }
-//        return false;
-//    }
+   /** 
+   * @Description: 生产验证码，存入到redis中，过期时间5分钟
+   * @Param: [] 
+   * @return:
+   * @Author: shenyini
+   * @Date: 2020/1/3 
+   */ 
+    @GetMapping("/api/sendCode")
+    public Result sendCode(String phone) {
+        //判断该手机号是否被注册，如果被注册过，则给出提示
+        if (userTbService.judgePhone(phone).size() != 0){
+            return new Result(true, 400,"该手机号已被注册过");
+        }
+        //查看是否有存该验证码，如果有，则提醒，如果没有，发送验证码
+        String code = stringRedisTemplate.opsForValue().get(phone + "1234");
+        if(code != null) {
+            return new Result(true, 400, "验证码正在发送，请耐心等待");
+        } else {
+            // 发送验证码
+            String s = TencentSmsSender.sendMsg(phone);
+            stringRedisTemplate.opsForValue().set(phone + "1234",s,60);
+//            stringRedisTemplate.opsForValue().set(phone + "1234","1234",60);
+            return new Result(true, 200, "发送验证码成功");
+        }
+    }
 
+
+    @GetMapping("/api/judgeCode")
+    public Result judgeCode(String phone, String code) {
+        String trueCode =  stringRedisTemplate.opsForValue().get(phone + "1234");
+        System.out.println(trueCode+code);
+        if(trueCode == null) {
+            return new Result(true, 400, "验证码已失效");
+        } else {
+
+            if(code.trim().equals(trueCode.trim())) {
+                return new Result(true, 200, "验证成功");
+            } else {
+                return new Result(true, 400, "验证码匹配失败，请输入正确的验证码");
+            }
+        }
+    }
 
     @GetMapping("/api/getUserDetail")
     public Result getUserDetail(String uid){

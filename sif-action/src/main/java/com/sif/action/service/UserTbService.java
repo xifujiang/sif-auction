@@ -14,11 +14,11 @@ import java.util.List;
  * @since 2019-10-26
  */
 public interface UserTbService extends IService<UserTb> {
-    public List<UserTb> judgePhone(String phone);
+    List<UserTb> judgePhone(String phone);
 
-    public void addUser(UserTb requestUser);
+    void addUser(UserTb requestUser);
 
-    public List<UserTb> selectNameAndPwd(String name, String password);
+    List<UserTb> selectNameAndPwd(String name, String password);
 
-    public String getUserId(String name);
+    String getUserId(String name);
 }
