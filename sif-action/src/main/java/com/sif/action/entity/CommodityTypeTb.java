@@ -23,7 +23,7 @@ public class CommodityTypeTb implements Serializable {
 
 private static final long serialVersionUID=1L;
 
-    @TableId(value = "typeid", type = IdType.ID_WORKER_STR)
+    @TableId(value = "typeid", type = IdType.AUTO)
     private Integer typeid;
 
     private String name;

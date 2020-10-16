@@ -15,7 +15,7 @@ import java.util.Date;
  * </p>
  *
  * @author Sif
- * @since 2019-12-09
+ * @since 2020-04-06
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -27,13 +27,17 @@ private static final long serialVersionUID=1L;
     /**
      * 评论id
      */
-    @TableId(value = "commentid", type = IdType.ID_WORKER_STR)
+    @TableId(value = "commentid", type = IdType.AUTO)
     private Integer commentid;
 
     /**
      * 拍卖物id
      */
     private String cid;
+
+    private String sellerid;
+
+    private String buyerid;
 
     /**
      * 商品质量
@@ -60,5 +64,17 @@ private static final long serialVersionUID=1L;
      */
     private Date time;
 
+    public CommodityCommentTb(){}
 
+    public CommodityCommentTb(Integer commentid, String cid, String sellerid, String buyerid, Integer cquality, Integer cspeed, Integer cattitude, String comment, Date time) {
+        this.commentid = commentid;
+        this.cid = cid;
+        this.sellerid = sellerid;
+        this.buyerid = buyerid;
+        this.cquality = cquality;
+        this.cspeed = cspeed;
+        this.cattitude = cattitude;
+        this.comment = comment;
+        this.time = time;
+    }
 }

@@ -17,22 +17,44 @@ public interface BiddingTbRepository extends JpaRepository<BiddingTb,String> {
     @Query(value = "SELECT * FROM bidding_tb WHERE cid = ? ORDER BY bidtime DESC",nativeQuery = true)
     List<BiddingTb> findBiddingRecord(String cid);
 
-    @Query(value="select  \n" +
-        "t1.bidid as bidid, t1.cid as cid, t2.image as image, t2.cname as cname, \n" +
-        "t1.bidprice as bidprice,t3.nowprice as nowprice, " +
-//        "t1.bidcount as bidcount, " +
-        "t1.bidtime as bidtime,t2.end_time as endtime, if(now() > t2.end_time,'竞拍结束','仍可竞拍') as nowstatus  \n" +
-        "from\n" +
-        "(select max(bidid) as bidid, cid as cid, count(bidid) as bidcount, max(bidprice) as bidprice, max(bidtime) as bidtime\n" +
-        "from bidding_tb GROUP BY uid,cid\n" +
-        "having uid = ?\n" +
-        ") t1\n" +
-        "left JOIN\n" +
-        "commodity_tb t2\n" +
-        "on t1.cid = t2.cid\n" +
-        "left JOIN\n" +
-        "(select cid as cid, max(bidprice) nowprice from bidding_tb group by cid) t3\n" +
-        "on t1.cid = t3.cid;", nativeQuery = true)
+    @Query(value="select\n" +
+        " t1.bidid AS bidid,\n" +
+        " t1.cid AS cid,\n" +
+        " t2.image AS image,\n" +
+        " t2.cname AS cname,\n" +
+        " t1.bidprice AS bidprice,\n" +
+        " t3.nowprice AS nowprice,\n" +
+        "t1.bidtime AS bidtime,\n" +
+        " t2.end_time AS endtime,\n" +
+        "t4.statu as nowstatus\n" +
+        "FROM\n" +
+        "\t(\n" +
+        "\t\tSELECT\n" +
+        "\t\t\tmax(bidid) AS bidid,\n" +
+        "\t\t\tcid AS cid,\n" +
+        "\t\t\tcount(bidid) AS bidcount,\n" +
+        "\t\t\tmax(bidprice) AS bidprice,\n" +
+        "\t\t\tmax(bidtime) AS bidtime\n" +
+        "\t\tFROM\n" +
+        "\t\t\tbidding_tb\n" +
+        "\t\twhere statu = 1\n" +
+        "\t\tGROUP BY\n" +
+        "\t\t\tuid,\n" +
+        "\t\t\tcid\n" +
+        "\t\tHAVING\n" +
+        "\t\t\tuid = ?\n" +
+        "\t) t1\n" +
+        "LEFT JOIN commodity_tb t2 ON t1.cid = t2.cid\n" +
+        "LEFT JOIN (\n" +
+        "\tSELECT\n" +
+        "\t\tcid AS cid,\n" +
+        "\t\tmax(bidprice) nowprice\n" +
+        "\tFROM\n" +
+        "\t\tbidding_tb\n" +
+        "\tGROUP BY\n" +
+        "\t\tcid\n" +
+        ") t3 ON t1.cid = t3.cid\n" +
+        "LEFT JOIN commodity_status_tb t4 on t2.statu=t4.id;", nativeQuery = true)
     List<Object[]> findMyBidding(String uid);
 
 

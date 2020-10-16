@@ -62,7 +62,7 @@ public class MD5Utils {
 
     // 测试主函数
     public static void main(String args[]) {
-        String s = new String("sa");
+        String s = new String("admin");
         System.out.println("原始：" + s);
         System.out.println("MD5后：" + MD5(s));
         System.out.println("MD5后再加密：" + KL(MD5(s)));

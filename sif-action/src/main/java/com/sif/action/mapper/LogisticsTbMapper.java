@@ -9,7 +9,7 @@ import com.sif.action.entity.LogisticsTb;
  * </p>
  *
  * @author Sif
- * @since 2019-11-11
+ * @since 2020-03-31
  */
 public interface LogisticsTbMapper extends BaseMapper<LogisticsTb> {
 

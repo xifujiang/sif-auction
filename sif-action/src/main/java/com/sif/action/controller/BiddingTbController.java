@@ -1,6 +1,10 @@
 package com.sif.action.controller;
 
 
+import com.alipay.api.AlipayApiException;
+import com.alipay.api.internal.util.AlipaySignature;
+import com.sif.action.config.AlipayConfig;
+import com.sif.action.constants.Constants;
 import com.sif.action.entity.BiddingTb;
 import com.sif.action.entity.MemberRuleTb;
 import com.sif.action.result.HistoryBidding;
@@ -15,7 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -31,26 +42,8 @@ public class BiddingTbController {
     @Autowired
     BiddingTbService biddingTbService;
 
-    /**
-    * @Description: 判断是否符合竞购要求
-    * @Param: [cid]
-    * @return: com.sif.common.entity.result.Result
-    * @Author: xifujiang
-    * @Date: 2019/11/11
-    */
-    public Result canBid(String uid){
-        return new Result();
-    }
-    /**
-    * @Description: 竞购拍卖物
-    * @Param: [cid]
-    * @return: com.sif.common.entity.result.Result
-    * @Author: xifujiang
-    * @Date: 2019/11/1
-    */
-    public Result bidCommodity(String cid){
-        return new Result();
-    }
+
+
 
     /**
     * @Description: 查看当前竞购物

@@ -3,10 +3,12 @@ package com.sif.action.service.impl;
 import com.sif.action.entity.OrderTb;
 import com.sif.action.mapper.OrderTbMapper;
 import com.sif.action.pojo.BiddingTb;
-import com.sif.action.pojo.CommodityTb;
+import com.sif.action.entity.CommodityTb;
+import com.sif.action.pojo.CommodityPojoTb;
 import com.sif.action.pojo.MyOrderInfo;
 import com.sif.action.pojo.OrderInfo;
 import com.sif.action.repository.OrderTbRepository;
+import com.sif.action.service.CommodityTbService;
 import com.sif.action.service.OrderTbService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sif.common.util.EntityUtils;
@@ -36,6 +38,9 @@ public class OrderTbServiceImpl extends ServiceImpl<OrderTbMapper, OrderTb> impl
     @Autowired
     private OrderTbRepository orderTbRepository;
 
+    @Autowired
+    private CommodityTbService commodityTbService;
+
     @Transactional
     @Override
     public void insertOrder(OrderInfo orderInfo, String payway,boolean flag) {
@@ -54,10 +59,23 @@ public class OrderTbServiceImpl extends ServiceImpl<OrderTbMapper, OrderTb> impl
         orderTb.setOid(trade_no);
         orderTb.setOrderStatus(1);
         orderTbMapper.updateById(orderTb);
+
+        OrderTb orderTb1 = orderTbMapper.selectById(trade_no);
+        String cid = orderTb1.getCid();
+        //更新商品状态 待发货
+        commodityTbService.updateStatus(cid, 4);
+
     }
 
+    /** 
+    * @Description: 竞拍到时间后，添加到用户订单表
+    * @Param: [biddingTb, commodityTb] 
+    * @return: void 
+    * @Author: shenyini
+    * @Date: 2020/3/31 
+    */ 
     @Override
-    public void addOrder(BiddingTb biddingTb, CommodityTb commodityTb) {
+    public void addOrder(BiddingTb biddingTb, CommodityPojoTb commodityTb) {
         OrderTb orderTb = new OrderTb();
         orderTb.setOid("2"+biddingTb.getBidid());
         orderTb.setCid(commodityTb.getCid());
@@ -66,7 +84,8 @@ public class OrderTbServiceImpl extends ServiceImpl<OrderTbMapper, OrderTb> impl
         BigDecimal deposit = commodityTb.getPrice().add(commodityTb.getAddprice());
         orderTb.setDeposit(deposit);
         orderTb.setPrice(biddingTb.getBidprice());
-        orderTb.setOrderStatus(0);
+        orderTb.setOrderStatus(-1);
+        orderTbMapper.insert(orderTb);
     }
 
     @Override

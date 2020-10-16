@@ -16,24 +16,36 @@ public interface OrderTbRepository extends JpaRepository<OrderTb, String> {
     * @Date: 2019/12/25
     */
     @Query(value = "SELECT\n" +
-        "\tt1.oid as oid,\n" +
-        "\tt1.uid as uid,\n" +
-        "\tt1.cid AS cid,\n" +
-        "\tt2.image as image,\n" +
+        "t1.oid as oid,\n" +
+        "t1.uid as uid,\n" +
+        "t1.cid AS cid,\n" +
+        "t2.image as image,\n" +
         "t2.cname as cname,\n" +
         "t1.deposit as deposit,\n" +
         "t1.price as price,\n" +
         "t1.time as time,\n" +
-        "case t1.order_status\n" +
-        "when 0 then '还未支付'\n" +
-        "when 1 then '已支付'\n" +
-        "when 2 then '支付过期'\n" +
-        "else '异常'\n" +
-        "end as statu\n" +
+        "t3.statu as statu\n" +
+        "FROM\n" +
+        "order_tb t1\n" +
+        "LEFT JOIN commodity_tb t2 ON t1.cid = t2.cid\n" +
+        "left JOIN commodity_status_tb t3 on t2.statu = t3.id\n" +
+        "WHERE\n" +
+        "uid = ?",nativeQuery = true)
+    List<Object[]> getMyOrder(String uid);
+
+    @Query(value="SELECT\n" +
+        "\tt1.oid as oid,\n" +
+        "\tt1.addressid as addressid,\n" +
+        "\tt2.addressee as addressee,\n" +
+        "\tt2.province as province,\n" +
+        "\tt2.city as city,\n" +
+        "\tt2.part as part,\n" +
+        "\tt2.detail as detail,\n" +
+        "\tt2.phone as phone\n" +
         "FROM\n" +
         "\torder_tb t1\n" +
-        "LEFT JOIN commodity_tb t2 ON t1.cid = t2.cid\n" +
+        "LEFT JOIN user_address_tb t2 ON t1.addressid = t2.addid\n" +
         "WHERE\n" +
-        "\tuid = ?",nativeQuery = true)
-    List<Object[]> getMyOrder(String uid);
+        "\tcid = ?",nativeQuery = true)
+    List<Object[]>  selectOrderAddress(String cid);
 }

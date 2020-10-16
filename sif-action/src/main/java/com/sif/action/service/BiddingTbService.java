@@ -2,10 +2,7 @@ package com.sif.action.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sif.action.entity.BiddingTb;
-import com.sif.action.entity.MemberRuleTb;
-import com.sif.action.pojo.CommodityTb;
-import com.sif.action.pojo.OrderInfo;
-import com.sif.action.result.HistoryBidding;
+import com.sif.action.entity.CommodityTb;
 import com.sif.action.result.MyBidding;
 import com.sif.common.entity.result.Result;
 
@@ -24,6 +21,8 @@ public interface BiddingTbService extends IService<BiddingTb> {
 
     void updateBiddingStatus(String trade_no);
 
+    public void updateBiddingStatus(String bid, Integer statu);
+
     List<MyBidding> findMyBidding(String uid);
 
     boolean isMaxBidder(String cid, String uid);
@@ -40,4 +39,6 @@ public interface BiddingTbService extends IService<BiddingTb> {
     void insertBidding(BiddingTb bidding);
 
     com.sif.action.pojo.BiddingTb selectMaxBidding(String cid);
+
+
 }

@@ -1,12 +1,10 @@
 package com.sif.action.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sif.action.entity.LogisticsTb;
 import com.sif.action.pojo.GoodDetail;
 import com.sif.action.entity.CommodityTb;
-import com.sif.action.result.GoodDetailResult;
-import com.sif.action.result.HistoryBidding;
-import com.sif.action.result.HistoryCommodity;
-import com.sif.action.result.ShopForm;
+import com.sif.action.result.*;
 
 import java.util.List;
 
@@ -20,7 +18,9 @@ import java.util.List;
  */
 public interface CommodityTbService extends IService<CommodityTb> {
 
-    void addCommodity(ShopForm shopForm,String uid);
+
+
+    void addCommodity(ShopForm shopForm, String uid);
 
     GoodDetailResult getGoodDetail(String cid);
 
@@ -40,8 +40,37 @@ public interface CommodityTbService extends IService<CommodityTb> {
     GoodDetail getGood(String cid);
 
     /*获取所有仍在竞拍的商品*/
-    List<com.sif.action.pojo.CommodityTb> getIsBiddingCommodity();
+    List<com.sif.action.pojo.CommodityPojoTb> getIsBiddingCommodity();
 
     /*通过商品id查询商家*/
     String selectSeller(String cid);
+
+    void deleteFavorite(String uid, String cid);
+
+    boolean addFavorite(String uid, String cid);
+
+    /*更新状态*/
+    void updateStatus(String cid,Integer statu);
+
+    List<CommodityTb> selectStatus(Integer statu);
+
+    void updateNowPrice(CommodityTb commodityTb);
+
+    int sellerCannalOrder(String cid, String uid);
+
+    void insertLogistics(LogisticsTb logisticsTb);
+
+    LogisticsTb selectLogistics(String cid);
+
+    int buyerCannalOrder(String cid, String uid);
+
+    void addComment(CommitPojo commit);
+
+    List<SellerComment> sellerComment(String sellerid);
+
+    List<ItemFour> queryHotCommodity();
+
+    List<ItemFour> queryRecommendCommodity(String uid);
+
+
 }

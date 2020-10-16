@@ -2,13 +2,16 @@ package com.sif.action.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sif.action.entity.BiddingTb;
+import com.sif.action.entity.CommodityTb;
 import com.sif.action.entity.DepositPayTb;
 import com.sif.action.entity.OrderTb;
 import com.sif.action.mapper.BiddingTbMapper;
+import com.sif.action.mapper.CommodityTbMapper;
 import com.sif.action.mapper.DepositPayTbMapper;
 import com.sif.action.pojo.DepositUserInfo;
 import com.sif.action.pojo.OrderInfo;
 import com.sif.action.repository.BiddingTbRepository;
+import com.sif.action.service.CommodityTbService;
 import com.sif.action.service.DepositPayTbService;
 import com.sif.common.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,9 @@ public class DepositPayTbServiceImpl extends ServiceImpl<DepositPayTbMapper, Dep
     @Autowired
     BiddingTbRepository biddingTbRepository;
 
+    @Autowired
+    CommodityTbService commodityTbService;
+
     @Transactional
     @Override
     public void insertDeposit(OrderInfo orderInfo, String payway, boolean flag) {
@@ -68,7 +74,7 @@ public class DepositPayTbServiceImpl extends ServiceImpl<DepositPayTbMapper, Dep
 
     @Transactional
     @Override
-    public void updateDepositStatus(String trade_no) {
+    public void updateDepositStatus(String trade_no, String total_amount) {
         DepositPayTb depositPayTb = new DepositPayTb();
         depositPayTb.setDid(trade_no);
         depositPayTb.setStatu(1);
@@ -79,6 +85,21 @@ public class DepositPayTbServiceImpl extends ServiceImpl<DepositPayTbMapper, Dep
         biddingTb.setBidid(trade_no);
         biddingTb.setStatu(1);
         biddingTbMapper.updateById(biddingTb);
+
+        DepositPayTb depositPayTb1 = depositPayTbMapper.selectById(trade_no);
+        String cid = depositPayTb1.getCid();
+//        Map map = new HashMap();
+//        map.put("bidid", trade_no);
+//        List<BiddingTb> biddingTbs = biddingTbMapper.selectByMap(map);
+//        if(biddingTbs != null && biddingTbs.size() != 0) {
+//            BiddingTb biddingTb1 = biddingTbs.get(0);
+            //更新当前价格
+            CommodityTb commodityTb = new CommodityTb();
+            commodityTb.setCid(cid);
+            commodityTb.setNowprice(new BigDecimal(total_amount));
+            commodityTb.setStatu(2); //状态变成 2
+            commodityTbService.updateNowPrice(commodityTb);
+//        }
     }
 
     @Override

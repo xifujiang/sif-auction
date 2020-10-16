@@ -1,10 +1,18 @@
 package com.sif.action.controller;
 
 
+import com.sif.action.config.JsonUtil;
+import com.sif.action.config.SpringHttpClient;
 import com.sif.action.constants.Constants;
+import com.sif.action.entity.CommodityCommentTb;
 import com.sif.action.entity.CommodityTb;
+import com.sif.action.entity.LogisticsTb;
+import com.sif.action.pojo.CommodityPojoTb;
 import com.sif.action.pojo.GoodDetail;
+import com.sif.action.pojo.MyCommodityBean;
+import com.sif.action.pojo.OrderAddress;
 import com.sif.action.repository.CommodityTbRepository;
+import com.sif.action.repository.OrderTbRepository;
 import com.sif.action.result.*;
 import com.sif.action.service.CommodityTbService;
 import com.sif.common.entity.result.Result;
@@ -18,7 +26,10 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -36,6 +47,9 @@ public class CommodityTbController {
 
     @Autowired
     private CommodityTbRepository commodityTbRepository;
+
+    @Autowired
+    private  OrderTbRepository orderTbRepository;
 
     /** 
     * @Description: 添加拍卖物
@@ -90,6 +104,121 @@ public class CommodityTbController {
     }
 
     /** 
+    * @Description: 下架商品 
+    * @Param: [cid] 
+    * @return: com.sif.common.entity.result.Result 
+    * @Author: shenyini
+    * @Date: 2020/3/26 
+    */ 
+    @GetMapping("/api/takeOffCommodity")
+    public Result takeOffCommodity(String cid) {
+        commodityTbService.updateStatus(cid,8);
+        return new Result();
+    }
+    /**
+    * @Description: 重新上架
+    * @Param: [cid]
+    * @return: com.sif.common.entity.result.Result
+    * @Author: shenyini
+    * @Date: 2020/3/31
+    */
+    @GetMapping("/api/takeOnCommodity")
+    public Result takeOnCommodity(String cid) {
+        commodityTbService.updateStatus(cid,-1);
+        return new Result();
+    }
+
+    /**
+    * @Description: 添加物流信息，发货
+    * @Param: [cid]
+    * @return: com.sif.common.entity.result.Result
+    * @Author: shenyini
+    * @Date: 2020/4/1
+    */
+    @GetMapping("/api/transportCommodity")
+    public Result transportCommodity(String logisticsid, String logisticstype, String cid, int addid, String info,String oid) {
+        //记录物流信息
+        LogisticsTb logisticsTb = new LogisticsTb();
+        logisticsTb.setLogisticsid(logisticsid);
+        logisticsTb.setLogisticstype(logisticstype);
+        logisticsTb.setCid(cid);
+        logisticsTb.setOid(oid);
+        logisticsTb.setAddid(addid);
+        logisticsTb.setInfo(info);
+        commodityTbService.insertLogistics(logisticsTb);
+        commodityTbService.updateStatus(logisticsTb.getCid(),5);
+        return new Result(true,200,"发货成功");
+    }
+
+    /**
+    * @Description: 显示物流
+    * @Param: [cid]
+    * @return: com.sif.common.entity.result.Result
+    * @Author: shenyini
+    * @Date: 2020/4/1
+    */
+    @GetMapping("/api/showTransport")
+    public Result showTransport(String cid) {
+        LogisticsTb logisticsTb = commodityTbService.selectLogistics(cid);
+        Map<String, String> headerMap = new HashMap<String, String>();
+        Map<String, String> paramMap = new HashMap<String, String>();
+        paramMap.put("type","tnt");
+        paramMap.put("postid",logisticsTb.getLogisticsid());
+        String str = SpringHttpClient.post("https://www.kuaidi100.com/query", headerMap, paramMap);
+        Map<String, Object> stringObjectMap = JsonUtil.JsonToMap(str);
+        Object data = stringObjectMap.get("data");
+        System.err.println(data.toString());
+        return new Result(true,200,"显示物流成功", data.toString());
+    }
+
+
+    /**
+    * @Description:  查询订单地址
+    * @Param: [cid, uid]
+    * @return: com.sif.common.entity.result.Result
+    * @Author: shenyini
+    * @Date: 2020/4/1
+    */
+    @GetMapping("/api/selectOrderAddress")
+    public Result selectOrderAddress(String cid) {
+        List<OrderAddress> orderAddresses = EntityUtils.castEntity(orderTbRepository.selectOrderAddress(cid), OrderAddress.class, new OrderAddress());
+        System.out.println(orderAddresses.size());
+        OrderAddress orderAddress = null;
+        if(orderAddresses != null && orderAddresses.size() != 0) {
+            orderAddress = orderAddresses.get(0);
+        }
+        System.out.println(orderAddress.toString());
+        return new Result(true, 200, "查询订单地址成功", orderAddress);
+    }
+
+    /**
+    * @Description: 取消订单
+    * @Param: [cid]
+    * @return: com.sif.common.entity.result.Result
+    * @Author: shenyini
+    * @Date: 2020/4/1
+    */
+    @GetMapping("/api/sellerCannalOrder")
+    public Result sellerCannalOrder(String cid, String uid) {
+        int credit = commodityTbService.sellerCannalOrder(cid, uid);
+        return new Result(true,200,"取消订单成功",credit);
+    }
+
+
+    /**
+    * @Description: 买家取消订单
+    * @Param: [cid]
+    * @return: com.sif.common.entity.result.Result
+    * @Author: shenyini
+    * @Date: 2020/4/3
+    */
+    @GetMapping("/api/buyerCannalOrder")
+    public Result buyerCannalOrder(String cid, String uid) {
+        int credit = commodityTbService.buyerCannalOrder(cid, uid);
+        return new Result(true,200,"取消订单成功",credit);
+    }
+
+    /** 
     * @Description: 更新拍卖物 
     * @Param: [commodityTb] 
     * @return: com.sif.common.entity.result.Result 
@@ -101,35 +230,24 @@ public class CommodityTbController {
     }
 
 
-    /** 
-    * @Description: 更新拍卖物状态 
-    * @Param: [status] 
-    * @return: com.sif.common.entity.result.Result 
-    * @Author: xifujiang
-    * @Date: 2019/11/1 
-    */ 
-    public Result updateCommodityStatus(String status){
-        return new Result();
-    }
-    
 
     /**
     * @Description: 根据关键字获取商品列表
-    * @Param: [ctype]
+    * @Param: [ctype,current//页码,pageSize//每页数量]
     * @return: com.sif.common.entity.result.Result
     * @Author: xifujiang
     * @Date: 2019/11/14
     */
     @GetMapping("/api/getGoodsList")
     public Result getGoodsList(String ctype){
-        GoodsListResult good = new GoodsListResult();
-        List<GoodsListResult> goodList = EntityUtils.castEntity(commodityTbRepository.findGoodList(ctype) , GoodsListResult.class, good);
+        List<GoodsListResult> goodList = EntityUtils.castEntity(commodityTbRepository.findGoodList(ctype) , GoodsListResult.class, new GoodsListResult());
         goodList.forEach( item -> {
            if(item.getImage()!="" && item.getImage().length() > 4 &&!"http".equals(item.getImage().substring(0,4))) {
                item.setImage(Constants.IMAGE_PATH + item.getImage());
            }
         });
-        return new Result(true, 200, "添加成功", goodList);
+
+        return new Result(true, 200, "", goodList);
     }
 
     @GetMapping("/api/getGoodDetail")
@@ -147,7 +265,8 @@ public class CommodityTbController {
     */
     @GetMapping("/api/getUserCommodity")
     public Result getUserCommodity(String uid){
-        List<com.sif.action.pojo.CommodityTb> list = commodityTbRepository.findAllComodityByUid(uid);
+        List<MyCommodityBean> list = EntityUtils.castEntity(commodityTbRepository.findAllComodityByUid(uid) , MyCommodityBean.class, new MyCommodityBean());
+
         if(list.size() !=0 ) {
             list.forEach(item -> {
                 // 查看当前时间
@@ -214,6 +333,48 @@ public class CommodityTbController {
     public Result findHistoryGoodList(String cid){
         List<HistoryCommodity> list = commodityTbService.findHistoryGoodList(cid);
         return new Result(true,200,"获取成功", list);
+    }
+
+    @GetMapping("/api/deleteFavorite")
+    public Result deleteFavorite(String uid, String cid){
+        commodityTbService.deleteFavorite(uid,cid);
+        return new Result(true,200,"删除成功");
+    }
+
+    @GetMapping("/api/addFavorite")
+    public Result addFavorite(String uid, String cid) {
+        boolean flag = commodityTbService.addFavorite(uid, cid);
+        if (flag) {
+            return new Result(true, 200, "添加成功");
+        }
+        else {
+            return new Result(true, 400, "已收藏过");
+        }
+    }
+
+
+    @GetMapping("/api/beReceipt")
+    public Result beReceipt(String cid) {
+        commodityTbService.updateStatus(cid, 6);
+        return new Result(true, 200,"收货成功");
+    }
+
+    @PostMapping("/api/commit")
+    public Result commit(@RequestBody CommitPojo commitPojo){
+        commodityTbService.addComment(commitPojo);
+        return new Result(true, 200, "评论");
+    }
+
+    @GetMapping("/api/queryHotCommodity")
+    public Result queryHotCommodity(){
+        List<ItemFour> itemFour = commodityTbService.queryHotCommodity();
+        return new Result(true, 200, "热拍商品", itemFour);
+    }
+
+    @GetMapping("/api/queryRecommendCommodity")
+    public Result queryRecommendCommodity(String uid) {
+        List<ItemFour> itemFour = commodityTbService.queryRecommendCommodity(uid);
+        return new Result(true, 200, "推荐商品", itemFour);
     }
 }
 

@@ -91,6 +91,7 @@ public class UserTbController {
         LoginResult login = new LoginResult();
         List<LoginResult> loginResult = EntityUtils.castEntity(userTbRepository.getUserInfo(requestUser.getName(), pwd) , LoginResult.class, login);
         if(loginResult.size() != 0){
+
             return new Result(true, 200, "登录成功", loginResult.get(0));
         }
         return new Result(400);
@@ -117,7 +118,6 @@ public class UserTbController {
             // 发送验证码
             String s = TencentSmsSender.sendMsg(phone);
             stringRedisTemplate.opsForValue().set(phone + "1234",s,60);
-//            stringRedisTemplate.opsForValue().set(phone + "1234","1234",60);
             return new Result(true, 200, "发送验证码成功");
         }
     }

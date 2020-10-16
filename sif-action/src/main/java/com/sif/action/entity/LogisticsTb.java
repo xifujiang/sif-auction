@@ -14,7 +14,7 @@ import java.io.Serializable;
  * </p>
  *
  * @author Sif
- * @since 2019-12-09
+ * @since 2020-04-01
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -23,10 +23,12 @@ public class LogisticsTb implements Serializable {
 
 private static final long serialVersionUID=1L;
 
+    @TableId(value = "lid", type = IdType.AUTO)
+    private Integer lid;
+
     /**
      * 物流id
      */
-    @TableId(value = "logisticsid", type = IdType.ID_WORKER_STR)
     private String logisticsid;
 
     /**
@@ -39,7 +41,7 @@ private static final long serialVersionUID=1L;
      */
     private String cid;
 
-    private String uid;
+    private String oid;
 
     /**
      * 收货地址
@@ -57,9 +59,9 @@ private static final long serialVersionUID=1L;
     private Integer changeid;
 
     /**
-     * 物流状态
+     * 备注
      */
-    private Integer statu;
+    private String info;
 
 
 }

@@ -2,6 +2,8 @@ package com.sif.action.config;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /* *
  *类名：AlipayConfig

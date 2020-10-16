@@ -1,5 +1,6 @@
 package com.sif.action.service.impl;
 
+import com.sif.action.SSL.TencentSmsSender;
 import com.sif.action.constants.Constants;
 import com.sif.action.pojo.GoodDetail;
 import com.sif.action.entity.*;
@@ -8,19 +9,20 @@ import com.sif.action.pojo.History;
 import com.sif.action.pojo.OtherDetail;
 import com.sif.action.repository.BiddingTbRepository;
 import com.sif.action.repository.CommodityTbRepository;
-import com.sif.action.result.GoodDetailResult;
-import com.sif.action.result.HistoryBidding;
-import com.sif.action.result.HistoryCommodity;
-import com.sif.action.result.ShopForm;
+import com.sif.action.result.*;
 import com.sif.action.service.CommodityTbService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sif.action.service.WebSocketService;
 import com.sif.common.util.EntityUtils;
 import com.sif.common.util.IdWorker;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -56,13 +58,32 @@ public class CommodityTbServiceImpl extends ServiceImpl<CommodityTbMapper, Commo
     private UserCreditTbMapper userCreditTbMapper;
 
     @Autowired
-    private OrderTbMapper orderTbMapper;
-
-    @Autowired
     CommodityTbRepository commodityTbRepository;
 
     @Autowired
     BiddingTbRepository biddingTbRepository;
+
+    @Autowired
+    private FavoriteCommodityTbMapper favoriteCommodityTbMapper;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private LogisticsTbMapper logisticsTbMapper;
+
+    @Autowired
+    private WebSocketService webSocketService;
+
+    @Autowired
+    private OrderTbMapper orderTbMapper;
+
+    @Autowired
+    private PackageBillsTbMapper packageBillsTbMapper;
+
+
+    @Autowired
+    private CommodityCommentTbMapper commodityCommentTbMapper;
 
     /**
     * @Description: 发布商品 
@@ -88,6 +109,7 @@ public class CommodityTbServiceImpl extends ServiceImpl<CommodityTbMapper, Commo
             commodityTb.setCname(shopForm.getCname());
             commodityTb.setPrice(shopForm.getPrice());
             commodityTb.setAddprice(shopForm.getAddprice());
+            commodityTb.setNowprice(shopForm.getPrice());
             commodityTb.setImage(shopForm.getImage());
             commodityTb.setImages(shopForm.getImages());
             commodityTb.setDes(shopForm.getDesc());
@@ -132,16 +154,18 @@ public class CommodityTbServiceImpl extends ServiceImpl<CommodityTbMapper, Commo
         goodDetailResult.setPrice(commodityTb.getPrice());
         /*addprice*/
         goodDetailResult.setAddprice(commodityTb.getAddprice());
+        /*nowprice*/
+        goodDetailResult.setNowprice(commodityTb.getNowprice());
         /*nowprice 如果有竞购，取最近一次竞购的价格，否则取原价*/
-        List<com.sif.action.pojo.BiddingTb> biddingList = biddingTbRepository.findBiddingRecord(cid);
-        if(biddingList.size() == 0){
-            System.err.println("未拍卖过");
-            System.err.println(commodityTb.getPrice());
-            goodDetailResult.setNowprice(commodityTb.getPrice());
-        }else{
-            System.err.println(biddingList.get(0).getBidprice());
-            goodDetailResult.setNowprice(biddingList.get(0).getBidprice());
-        }
+//        List<com.sif.action.pojo.BiddingTb> biddingList = biddingTbRepository.findBiddingRecord(cid);
+//        if(biddingList.size() == 0){
+//            System.err.println("未拍卖过");
+//            System.err.println(commodityTb.getPrice());
+//            goodDetailResult.setNowprice(commodityTb.getPrice());
+//        }else{
+//            System.err.println(biddingList.get(0).getBidprice());
+//            goodDetailResult.setNowprice(biddingList.get(0).getBidprice());
+//        }
 
         /*images*/
         String[] images = commodityTb.getImages().split("_");
@@ -156,12 +180,12 @@ public class CommodityTbServiceImpl extends ServiceImpl<CommodityTbMapper, Commo
         String[] typeid = commodityTb.getTypeId().split("_");
         goodDetailResult.setTypeid(typeid);
         /*seller*/
-        Map map = new HashMap();
-        map.put("cid",cid);
-        List<UserCommodityTb> userCommodityTb = userCommodityTbMapper.selectByMap(map);
-        UserTb user = userTbMapper.selectById(userCommodityTb.get(0).getUid());
+
+        UserTb user = userTbMapper.selectById(this.selectSeller(cid));
         goodDetailResult.setSeller(user.getName());
         /*count*/
+        Map map = new HashMap();
+        map.put("cid",cid);
         List<BiddingTb> list = biddingTbMapper.selectByMap(map);
         goodDetailResult.setCount(list.size());
         /*score*/
@@ -169,9 +193,9 @@ public class CommodityTbServiceImpl extends ServiceImpl<CommodityTbMapper, Commo
         map2.put("uid", user.getUid());
         UserCreditTb userCreditTb = (UserCreditTb) userCreditTbMapper.selectByMap(map2).get(0);
         goodDetailResult.setScore(userCreditTb.getScore());
-        History history = new History();
-        List<History> histories = EntityUtils.castEntity(commodityTbRepository.findGoodList(cid) , History.class, history);
-        goodDetailResult.setHistory(histories);
+//        History history = new History();
+//        List<History> histories = EntityUtils.castEntity(commodityTbRepository.findGoodList(cid) , History.class, history);
+//        goodDetailResult.setHistory(histories);
         /*des*/
         goodDetailResult.setDes(commodityTb.getDes());
         /*param1*/
@@ -304,11 +328,15 @@ public class CommodityTbServiceImpl extends ServiceImpl<CommodityTbMapper, Commo
         goodDetail.setGoodDetailResult(this.getGoodDetail(cid));
         goodDetail.setHistoryCommodityList(this.findHistoryGoodList(cid));
         goodDetail.setHistoryBiddingList(this.selectHistoryBidding(cid));
+        /*评论*/
+        String sellerid = this.selectSeller(cid);
+        goodDetail.setSellerCommentList(this.sellerComment(sellerid));
         return goodDetail;
     }
 
+
     @Override
-    public List<com.sif.action.pojo.CommodityTb> getIsBiddingCommodity() {
+    public List<com.sif.action.pojo.CommodityPojoTb> getIsBiddingCommodity() {
         return commodityTbRepository.getIsBiddingCommodity();
     }
 
@@ -322,5 +350,202 @@ public class CommodityTbServiceImpl extends ServiceImpl<CommodityTbMapper, Commo
             uid = list.get(0).getUid();
         }
         return uid;
+    }
+
+    @Override
+    public void deleteFavorite(String uid, String cid) {
+        stringRedisTemplate.opsForSet().remove("favorite" + uid, cid);
+        Map map = new HashMap();
+        map.put("uid",uid);
+        map.put("cid",cid);
+        favoriteCommodityTbMapper.deleteByMap(map);
+    }
+
+    /**
+    * @Description: 添加喜欢
+    * @Param: [uid, cid]
+    * @return: boolean
+    * @Author: shenyini
+    * @Date: 2020/3/24
+    */
+    @Override
+    public boolean addFavorite(String uid, String cid) {
+        boolean flag = true;
+        Set<String> members = stringRedisTemplate.opsForSet().members("favorite" + uid);
+        if(members == null || members.size() == 0) {
+            Map map = new HashMap();
+            map.put("uid",uid);
+            List<FavoriteCommodityTb> list = favoriteCommodityTbMapper.selectByMap(map);
+            for(FavoriteCommodityTb favoriteCommodityTb: list) {
+                stringRedisTemplate.opsForSet().add("favorite" + uid, favoriteCommodityTb.getCid());
+            }
+        }
+        if(members != null && members.size() != 0) {
+            for(String member : members) {
+                if(cid.equals(member)) {
+                    flag = false;  //已收藏
+                }
+            }
+        }
+        if (flag) { //未收藏
+            stringRedisTemplate.opsForSet().add("favorite" + uid, cid);
+            FavoriteCommodityTb favoriteCommodityTb = new FavoriteCommodityTb();
+            favoriteCommodityTb.setUid(uid);
+            favoriteCommodityTb.setCid(cid);
+            favoriteCommodityTbMapper.insert(favoriteCommodityTb);
+        }
+        return flag;
+    }
+
+    @Override
+    public void updateStatus(String cid,Integer statu) {
+        CommodityTb commodityTb = new CommodityTb();
+        commodityTb.setCid(cid);
+        commodityTb.setStatu(statu);
+        commodityTbMapper.updateById(commodityTb);
+    }
+
+    @Override
+    public List<CommodityTb> selectStatus(Integer statu) {
+        Map map = new HashMap();
+        map.put("statu",statu);
+        List<CommodityTb> list = commodityTbMapper.selectByMap(map);
+        if(list !=null && list.size() != 0) return list;
+        return null;
+    }
+
+    @Override
+    public void updateNowPrice(CommodityTb commodityTb) {
+        commodityTbMapper.updateById(commodityTb);
+    }
+
+
+
+    /** 
+    * @Description: 插入物流
+    * @Param: [logisticsTb] 
+    * @return: void 
+    * @Author: shenyini
+    * @Date: 2020/4/1 
+    */ 
+    @Override
+    public void insertLogistics(LogisticsTb logisticsTb) {
+        logisticsTbMapper.insert(logisticsTb);
+    }
+
+    @Override
+    public LogisticsTb selectLogistics(String cid) {
+        Map map = new HashMap();
+        map.put("cid", cid);
+        List<LogisticsTb> list = logisticsTbMapper.selectByMap(map);
+        if(list != null && list.size() !=0){
+            return list.get(0);
+        }
+        return null;
+    }
+
+    /**
+     * @Description: 取消订单
+     * @Param: [cid]
+     * @return: int
+     * @Author: shenyini
+     * @Date: 2020/4/1
+     */
+    @Override
+    @Transactional
+    public int sellerCannalOrder(String cid, String uid) {
+        //商品状态改为流拍
+        this.updateStatus(cid, 10);
+        //减少信用
+        commodityTbRepository.changeCredit(Constants.CANNAL_ORDER, uid);
+
+        //提醒买家：卖家已取消交易
+        Map map = new HashMap();
+        map.put("cid",cid);
+        List<OrderTb> list = orderTbMapper.selectByMap(map);
+        OrderTb orderTb = null;
+        if(null != list && list.size() != 0) {
+            orderTb = list.get(0);
+        }
+        String maxMessage = "很遗憾地提醒您，卖家取消了本次订单，商品处于流拍状态，您的定金已退回到您的钱包中";
+        try {
+            webSocketService.sendToUserByUid(orderTb.getUid(), maxMessage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //退还买家定金
+        commodityTbRepository.rebackMoney(cid);
+
+        //记录退还金额
+        //复杂，暂时省略
+
+        //获取信用值返回
+        int credit = commodityTbRepository.getCredit(uid);
+        return credit;
+    }
+
+    @Override
+    @Transactional
+    public int buyerCannalOrder(String cid, String uid) {
+        this.updateStatus(cid, 10);
+
+        //减少信用
+        commodityTbRepository.changeCredit(Constants.CANNAL_ORDER, uid);
+
+        //提醒卖家：交易已取消
+        try {
+            String maxMessage = "很遗憾地提醒您，买家取消了本次订单，商品处于流拍状态，您可以重新上架商品";
+            webSocketService.sendToUserByUid(this.selectSeller(cid), maxMessage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //获取信用值返回
+        int credit = commodityTbRepository.getCredit(uid);
+        return 0;
+    }
+
+    @Transactional
+    @Override
+    public void addComment(CommitPojo commit) {
+        CommodityCommentTb commodityCommentTb = new CommodityCommentTb();
+        BeanUtils.copyProperties(commit, commodityCommentTb);
+        commodityCommentTb.setTime(new Date());
+        commodityCommentTb.setSellerid(this.selectSeller(commit.getCid()));
+        commodityCommentTbMapper.insert(commodityCommentTb);
+        String cid = commit.getCid();
+        this.updateStatus(cid, 7);
+    }
+
+    @Override
+    public List<SellerComment> sellerComment(String sellerid) {
+        List<SellerComment> list = EntityUtils.castEntity(commodityTbRepository.sellerComment(sellerid) , SellerComment.class, new SellerComment());
+        return list;
+    }
+
+    @Override
+    public List<ItemFour> queryHotCommodity() {
+        List<ItemFour> list = EntityUtils.castEntity(commodityTbRepository.hotCommodity() , ItemFour.class, new ItemFour());
+        list.forEach( item -> {
+            if(item.getImg()!="" && item.getImg().length() > 4 &&!"http".equals(item.getImg().substring(0,4))) {
+                item.setImg(Constants.IMAGE_PATH + item.getImg());
+            }
+        });
+        return list;
+    }
+
+    @Override
+    public List<ItemFour> queryRecommendCommodity(String uid) {
+        List<ItemFour> list = EntityUtils.castEntity(commodityTbRepository.recommendCommodity(uid) , ItemFour.class, new ItemFour());
+        if(null == list || list.size() < 8) {
+            list = EntityUtils.castEntity(commodityTbRepository.queryRandomCommodity() , ItemFour.class, new ItemFour());
+        }
+        list.forEach( item -> {
+            if(item.getImg()!="" && item.getImg().length() > 4 &&!"http".equals(item.getImg().substring(0,4))) {
+                item.setImg(Constants.IMAGE_PATH + item.getImg());
+            }
+        });
+        return list;
     }
 }

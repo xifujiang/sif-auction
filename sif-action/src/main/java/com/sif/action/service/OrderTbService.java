@@ -3,7 +3,8 @@ package com.sif.action.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sif.action.entity.OrderTb;
 import com.sif.action.pojo.BiddingTb;
-import com.sif.action.pojo.CommodityTb;
+import com.sif.action.entity.CommodityTb;
+import com.sif.action.pojo.CommodityPojoTb;
 import com.sif.action.pojo.MyOrderInfo;
 import com.sif.action.pojo.OrderInfo;
 
@@ -24,7 +25,7 @@ public interface OrderTbService extends IService<OrderTb> {
     void updateOrderStatus(String trade_no);
 
     /*如果竞拍成功，添加竞拍*/
-    void addOrder(BiddingTb biddingTb, CommodityTb commodityTb);
+    void addOrder(BiddingTb biddingTb, CommodityPojoTb commodityTb);
 
     List<MyOrderInfo> getMyOrder(String uid);
 }

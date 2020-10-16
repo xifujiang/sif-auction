@@ -56,6 +56,16 @@ public interface UserTbRepository extends JpaRepository<UserTb, String> {
     * @Author: shenyini
     * @Date: 2019/12/11 
     */ 
-    @Query(value="select count(DISTINCT cid) as cid from bidding_tb where uid = ? and statu = 1",nativeQuery = true)
+//    @Query(value="select count(DISTINCT cid) as cid from bidding_tb where uid = ? and statu = 1",nativeQuery = true)
+    @Query(value="SELECT\n" +
+        "\tcount(DISTINCT cid) AS cid\n" +
+        "FROM\n" +
+        "\tbidding_tb\n" +
+        "WHERE\n" +
+        "\tuid = ?1\n" +
+        "AND statu = 1\n" +
+        "and cid not in(\n" +
+        "\tSELECT\n" +
+        "\t\tcid from commodity_tb where statu>=3)",nativeQuery = true)
     Integer getUserBiddingCount(String uid);
 }

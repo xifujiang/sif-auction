@@ -27,7 +27,7 @@ private static final long serialVersionUID=1L;
     /**
      * 会员规则id
      */
-    @TableId(value = "memberid", type = IdType.ID_WORKER_STR)
+    @TableId(value = "memberid", type = IdType.AUTO)
     private Integer memberid;
 
     /**

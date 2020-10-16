@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Id;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -18,10 +19,14 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GoodsListResult implements Serializable {
+    @Id
     private String cid;
     private String image;
     private BigDecimal price;
+    private BigDecimal addprice;
+    private BigDecimal nowprice;
     private String intro;
     private int score;
     private String userName;
+    private String  statu;
 }

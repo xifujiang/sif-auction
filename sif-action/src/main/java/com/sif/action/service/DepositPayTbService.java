@@ -19,7 +19,7 @@ public interface DepositPayTbService extends IService<DepositPayTb> {
 
     void insertDeposit(OrderInfo orderInfo, String payway, boolean flag);
 
-    void updateDepositStatus(String trade_no);
+    void updateDepositStatus(String trade_no, String total_amount);
 
     /*根据cid查押金记录*/
     List<DepositPayTb> selectDepositPayByCid(String cid);

@@ -1,6 +1,7 @@
 package com.sif.action.service.impl;
 
 import com.sif.action.entity.BiddingTb;
+import com.sif.action.entity.CommodityTb;
 import com.sif.action.entity.DepositPayTb;
 import com.sif.action.mapper.BiddingTbMapper;
 import com.sif.action.mapper.DepositPayTbMapper;
@@ -8,6 +9,7 @@ import com.sif.action.repository.BiddingTbRepository;
 import com.sif.action.result.MyBidding;
 import com.sif.action.service.BiddingTbService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sif.action.service.CommodityTbService;
 import com.sif.common.entity.result.Result;
 import com.sif.common.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +41,24 @@ public class BiddingTbServiceImpl extends ServiceImpl<BiddingTbMapper, BiddingTb
     @Autowired
     DepositPayTbMapper depositPayTbMapper;
 
+    @Autowired
+    CommodityTbService commodityTbService;
+
     @Transactional
     @Override
     public void updateBiddingStatus(String trade_no) {
         BiddingTb biddingTb = new BiddingTb();
         biddingTb.setBidid(trade_no);
         biddingTb.setStatu(1);
+        biddingTbMapper.updateById(biddingTb);
+    }
+
+    @Transactional
+    @Override
+    public void updateBiddingStatus(String bid, Integer statu) {
+        BiddingTb biddingTb = new BiddingTb();
+        biddingTb.setBidid(bid);
+        biddingTb.setStatu(statu);
         biddingTbMapper.updateById(biddingTb);
     }
 
@@ -105,6 +119,12 @@ public class BiddingTbServiceImpl extends ServiceImpl<BiddingTbMapper, BiddingTb
     public void insertBidding(BiddingTb bidding) {
         bidding.setBidtime(new Date());
         biddingTbMapper.insert(bidding);
+
+        //更新当前价格
+        CommodityTb commodityTb = new CommodityTb();
+        commodityTb.setCid(bidding.getCid());
+        commodityTb.setNowprice(bidding.getBidprice());
+        commodityTbService.updateNowPrice(commodityTb);
     }
 
     @Override

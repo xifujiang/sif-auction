@@ -4,7 +4,7 @@ import com.sif.action.entity.MessageTb;
 import com.sif.action.entity.UserTb;
 import com.sif.action.mapper.MessageTbMapper;
 import com.sif.action.mapper.UserTbMapper;
-import com.sif.action.server.LogWebSocket;
+//import com.sif.action.server.LogWebSocket;
 import com.sif.action.service.WebSocketService;
 import com.sif.common.entity.email.EmailModel;
 import com.sif.common.util.MailSendUtils;
@@ -24,8 +24,8 @@ import java.util.Date;
  **/
 @Service
 public class WebSocketServiceImpl implements WebSocketService {
-    @Resource
-    LogWebSocket logWebSocket;
+//    @Resource
+//    LogWebSocket logWebSocket;
 
     @Autowired
     MessageTbMapper messageTbMapper;

@@ -44,10 +44,10 @@ public class GenCode {
 
         // 3、数据源配置
         DataSourceConfig dsc = new DataSourceConfig();
-        dsc.setUrl("jdbc:mysql://120.78.70.205:33306/auction_db");
+        dsc.setUrl("jdbc:mysql://localhost:3306/auction_db");
         dsc.setDriverName("com.mysql.jdbc.Driver");
-        dsc.setUsername("shenyini");
-        dsc.setPassword("shenyini123$%^");
+        dsc.setUsername("root");
+        dsc.setPassword("123456");
         dsc.setDbType(DbType.MYSQL);
         mpg.setDataSource(dsc);
 
@@ -65,7 +65,7 @@ public class GenCode {
         StrategyConfig strategy = new StrategyConfig();
         //strategy.setInclude(moduleName + "_\\w*");//设置要映射的表名
 //        String[] tableName = new String[]{"bidding_tb","commodity_comment_tb","commodity_tb","commodity_type_tb","order_tb","user_address_tb","user_commodity_tb","user_credit_tb","user_tb"};
-        String[] tableName = new String[]{"user_address_tb"};
+        String[] tableName = new String[]{"commodity_status_tb","favorite_commodity_tb"};
 
 
         //strategy.setInclude("commodity_type2_tb");

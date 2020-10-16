@@ -9,7 +9,7 @@ import com.sif.action.entity.CommodityTb;
  * </p>
  *
  * @author Sif
- * @since 2019-11-11
+ * @since 2020-03-30
  */
 public interface CommodityTbMapper extends BaseMapper<CommodityTb> {
 

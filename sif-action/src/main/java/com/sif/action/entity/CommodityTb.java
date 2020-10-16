@@ -16,7 +16,7 @@ import java.util.Date;
  * </p>
  *
  * @author Sif
- * @since 2019-12-09
+ * @since 2020-03-30
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -45,6 +45,8 @@ private static final long serialVersionUID=1L;
      * 每次加价
      */
     private BigDecimal addprice;
+
+    private BigDecimal nowprice;
 
     /**
      * 商品图片
@@ -92,7 +94,7 @@ private static final long serialVersionUID=1L;
     private String brandName;
 
     /**
-     * 商品状态 0-未审核，1-未开始拍卖 2-正在竞拍，3-拍卖完成，4-下架，5-删除
+     * 商品状态 -1-未审核0-展示阶段 1-开拍 2-在拍 3-竞拍结束 4-待发货 5-已发货 6-已收货 7-交易成功 8-下架，9-删除 10-流拍
      */
     private Integer statu;
 
